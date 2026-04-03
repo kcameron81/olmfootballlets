@@ -34,10 +34,11 @@ export default function AppLayout() {
       tabBarInactiveTintColor: '#999',
       headerStyle: { backgroundColor: '#fff', borderBottomColor: '#e0e0e0', borderBottomWidth: 1 },
       headerTintColor: '#1a1a2e',
+      headerTitle: 'OLM Football',
       headerLeft: () => <HeaderLogo />,
     }}>
-      <Tabs.Screen name="calendar" options={{ title: 'Schedule' }} />
-      <Tabs.Screen name="summary" options={{ title: 'Summary' }} />
+      <Tabs.Screen name="calendar" options={{ title: 'Scheduling' }} />
+      <Tabs.Screen name="summary" options={{ title: 'Cost Summary' }} />
       <Tabs.Screen name="settings" options={{ title: 'Settings' }} />
       <Tabs.Screen name="year-groups" options={{ href: null }} />
       <Tabs.Screen name="fees/[id]" options={{ href: null }} />

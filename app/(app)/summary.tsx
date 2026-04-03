@@ -1,18 +1,14 @@
-import React, { useEffect, useState, useMemo } from 'react'
+import React, { useEffect, useState, useMemo, useCallback } from 'react'
+import { useFocusEffect } from 'expo-router'
 import { View, Text, FlatList, TouchableOpacity, ScrollView, StyleSheet } from 'react-native'
 import { supabase } from '../../lib/supabase'
 import { PitchBooking } from '../../lib/types'
 
-const RATE_PER_HOUR = 60
+const SESSION_COST = 60
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
-function calcCost(startTime: string | null, endTime: string | null): number {
-  if (!startTime || !endTime) return 0
-  const [sh, sm] = startTime.split(':').map(Number)
-  const [eh, em] = endTime.split(':').map(Number)
-  if (isNaN(sh) || isNaN(sm) || isNaN(eh) || isNaN(em)) return 0
-  const hours = (eh * 60 + em - (sh * 60 + sm)) / 60
-  return hours > 0 ? hours * RATE_PER_HOUR : 0
+function calcCost(_startTime: string | null, _endTime: string | null): number {
+  return SESSION_COST
 }
 
 interface YearGroupSummary {
@@ -32,15 +28,17 @@ export default function Summary() {
   const [allBookings, setAllBookings] = useState<PitchBooking[]>([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     fetchData()
-  }, [])
+  }, []))
 
   async function fetchData() {
-    const [{ data: groups }, { data: bookings }] = await Promise.all([
+    const [{ data: groups, error: gErr }, { data: bookings, error: bErr }] = await Promise.all([
       supabase.from('year_groups').select('id, name').order('name'),
-      supabase.from('pitch_bookings').select('year_group_id, booking_date, start_time, end_time'),
+      supabase.from('pitch_bookings').select('year_group_id, booking_date, start_time, end_time').limit(10000),
     ])
+    console.log('Summary fetch — groups:', groups?.length, 'bookings:', bookings?.length, 'errors:', gErr, bErr)
+    console.log('Bookings by date:', bookings?.map(b => b.booking_date).sort())
     setYearGroups(groups ?? [])
     setAllBookings((bookings ?? []) as PitchBooking[])
     setLoading(false)
@@ -65,12 +63,16 @@ export default function Summary() {
       const allTimeTotal = groupBookings.reduce((sum, b) => sum + calcCost(b.start_time, b.end_time), 0)
       const monthTotal = groupBookings
         .filter(b => {
-          const d = new Date(b.booking_date)
-          return d.getMonth() === selectedMonth && d.getFullYear() === selectedYear
+          const [y, m] = b.booking_date.split('-').map(Number)
+          return m - 1 === selectedMonth && y === selectedYear
         })
         .reduce((sum, b) => sum + calcCost(b.start_time, b.end_time), 0)
 
-      return { id: yg.id, name: yg.name, monthTotal, allTimeTotal, bookingCount: groupBookings.length }
+      const monthBookingCount = groupBookings.filter(b => {
+        const [y, m] = b.booking_date.split('-').map(Number)
+        return m - 1 === selectedMonth && y === selectedYear
+      }).length
+      return { id: yg.id, name: yg.name, monthTotal, allTimeTotal, bookingCount: monthBookingCount }
     })
   }, [filteredGroups, allBookings, selectedMonth, selectedYear])
 
@@ -130,12 +132,12 @@ export default function Summary() {
             <Text style={styles.cardName}>{item.name}</Text>
             <View style={styles.cardRow}>
               <View style={styles.cardStat}>
-                <Text style={styles.statLabel}>{MONTH_NAMES[selectedMonth]}</Text>
-                <Text style={styles.statValue}>£{item.monthTotal.toFixed(0)}</Text>
+                <Text style={styles.statLabel}>Sessions</Text>
+                <Text style={styles.statValue}>{item.bookingCount}</Text>
               </View>
               <View style={styles.cardStat}>
-                <Text style={styles.statLabel}>Bookings</Text>
-                <Text style={styles.statValue}>{item.bookingCount}</Text>
+                <Text style={styles.statLabel}>Cost ({MONTH_NAMES[selectedMonth]})</Text>
+                <Text style={styles.statValue}>£{item.monthTotal.toFixed(0)}</Text>
               </View>
             </View>
           </View>

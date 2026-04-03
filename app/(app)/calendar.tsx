@@ -120,16 +120,10 @@ const PITCH_OPTIONS = [
   'Roukenglen Pitches',
   'Other',
 ]
-const RATE_PER_HOUR = 60
+const SESSION_COST = 60
 
-function calcCost(startTime: string | null, endTime: string | null): number | null {
-  if (!startTime || !endTime) return null
-  const [sh, sm] = startTime.split(':').map(Number)
-  const [eh, em] = endTime.split(':').map(Number)
-  if (isNaN(sh) || isNaN(sm) || isNaN(eh) || isNaN(em)) return null
-  const hours = (eh * 60 + em - (sh * 60 + sm)) / 60
-  if (hours <= 0) return null
-  return hours * RATE_PER_HOUR
+function calcCost(_startTime: string | null, _endTime: string | null): number | null {
+  return SESSION_COST
 }
 
 export default function CalendarScreen() {
