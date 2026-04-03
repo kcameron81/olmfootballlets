@@ -27,7 +27,7 @@
     "web": {
       "bundler": "metro",
       "favicon": "./assets/favicon.png",
-      "output": "static"
+      "output": "single"
     },
     "experiments": {
       "baseUrl": "/olmfootballlets"
