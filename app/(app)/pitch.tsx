@@ -5,12 +5,13 @@ import { supabase } from '../../lib/supabase'
 import { PitchBooking, YearGroup } from '../../lib/types'
 
 const PITCHES = [
-  'Woodfarm 11s',
-  'GHA 11s',
-  'Williamwood 11s',
-  'Maidenhill 9s',
-  'Woodfarm Cages',
-  'Muirend Cages',
+  'Woodfarm 11s (Astro)',
+  'GHA 11s (Astro)',
+  'Williamwood 11s (Astro)',
+  'Maidenhill 9s (Astro)',
+  'Muirend Pitches (Grass)',
+  'Woodfarm 5s Cages (Astro)',
+  'Muirend 5s Cages (Astro)',
 ]
 
 const GROUP_COLORS = ['#007AFF', '#34C759', '#FF9500', '#FF3B30', '#AF52DE', '#5AC8FA', '#FF2D55', '#FFCC00']
@@ -18,18 +19,18 @@ const PITCH_GREEN = '#4a9e4a'
 const PITCH_GREEN_ALT = '#3d8a3d'
 const PITCH_GREEN_SELECTED = '#2ecc71'
 const PITCH_GREEN_BOOKED = '#c0392b'
-const LINE = 'rgba(255,255,255,0.9)'
+const LINE = '#ffffff'
 
 const CAGE_COUNTS: Record<string, number> = {
-  'Woodfarm Cages': 3,
-  'Muirend Cages': 2,
+  'Woodfarm 5s Cages (Astro)': 3,
+  'Muirend 5s Cages (Astro)': 2,
 }
 
 const CAGE_LABEL_OVERRIDES: Record<string, string[]> = {
-  'Muirend Cages': ['5s Pitch 1 & 2', '5s Pitch 3 & 4'],
+  'Muirend 5s Cages (Astro)': ['5s Pitch 1 & 2', '5s Pitch 3 & 4'],
 }
 
-const QUARTER_PITCHES = ['GHA 11s']
+const QUARTER_PITCHES = ['GHA 11s (Astro)']
 const QUARTER_KEYS = ['q1', 'q2', 'q3', 'q4']
 const QUARTER_LABELS = ['Q1', 'Q2', 'Q3', 'Q4']
 
@@ -132,7 +133,7 @@ function FullPitch({ selectedHalf, pitchBooked, onToggle }: {
   )
 }
 
-const WHOLE_PITCH_ONLY = ['Maidenhill 9s']
+const WHOLE_PITCH_ONLY = ['Maidenhill 9s (Astro)']
 
 function SinglePitch({ selected, pitchBooked, onToggle }: {
   selected: boolean; pitchBooked: boolean; onToggle: () => void
@@ -164,7 +165,7 @@ function MiniPitch({ label, selected, booked, bg, onToggle }: {
       {/* Goal top */}
       <View style={{ position: 'absolute', top: 0, alignSelf: 'center', width: 28, height: 8, borderBottomWidth: 2, borderLeftWidth: 2, borderRightWidth: 2, borderColor: LINE }} />
       {/* Centre line */}
-      <View style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: 1, backgroundColor: LINE }} />
+      <View style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: StyleSheet.hairlineWidth, backgroundColor: LINE }} />
       {/* Goal bottom */}
       <View style={{ position: 'absolute', bottom: 0, alignSelf: 'center', width: 28, height: 8, borderTopWidth: 2, borderLeftWidth: 2, borderRightWidth: 2, borderColor: LINE }} />
       <Text style={styles.halfLabel}>{selected ? '✓' : booked ? '🔴' : label}</Text>
@@ -199,9 +200,16 @@ function QuarterPitch({ selectedSections, pitchBooked, onToggle }: {
 }
 
 const CAGE_DISABLED: Record<string, number[]> = {
-  'Muirend Cages': [1],
-  'Woodfarm Cages': [0],
+  'Muirend 5s Cages (Astro)': [1],
+  'Woodfarm 5s Cages (Astro)': [0],
 }
+
+const MUIREND_GRASS = 'Muirend Pitches (Grass)'
+const NINES_W = 148
+const NINES_H = 90
+const SEVENS_W = 92
+const SEVENS_H = 112
+const MUIREND_GAP = 5
 
 function CagePitch({ pitchName, index, label, selected, booked, onToggle }: {
   pitchName: string; index: number; label: string; selected: boolean; booked: boolean; onToggle: () => void
@@ -215,6 +223,94 @@ function CagePitch({ pitchName, index, label, selected, booked, onToggle }: {
       {disabled ? null : <View style={styles.cageGoalBottom} />}
       <Text style={[styles.cageLabel, disabled ? { color: '#888' } : null]}>{disabled ? 'Unavailable' : selected ? '✓' : booked ? '🔴 Booked' : label}</Text>
     </TouchableOpacity>
+  )
+}
+
+function MuirendGrassPitches({ selectedSections, pitchBooked, onToggle }: {
+  selectedSections: Set<string>; pitchBooked: boolean; onToggle: (key: string) => void
+}) {
+  function bg(key: string, alt = false) {
+    if (selectedSections.has(key)) return PITCH_GREEN_SELECTED
+    if (pitchBooked) return PITCH_GREEN_BOOKED
+    return alt ? PITCH_GREEN_ALT : PITCH_GREEN
+  }
+
+  const totalW = NINES_W * 2 + MUIREND_GAP
+  const sevensLeft = totalW - SEVENS_W
+  const sevensTop2 = SEVENS_H + MUIREND_GAP
+  const ninesTop = SEVENS_H * 2 + MUIREND_GAP * 2
+  const totalH = ninesTop + NINES_H
+
+  const ninesPitchMarkings = (
+    <>
+      {/* Goal left */}
+      <View style={{ position: 'absolute', left: 0, top: '50%', marginTop: -14, height: 28, width: 8, borderRightWidth: 1.5, borderTopWidth: 1.5, borderBottomWidth: 1.5, borderColor: LINE }} />
+      {/* Penalty area left */}
+      <View style={{ position: 'absolute', left: 8, top: '50%', marginTop: -22, height: 44, width: 28, borderRightWidth: 1.5, borderTopWidth: 1.5, borderBottomWidth: 1.5, borderColor: LINE }} />
+      {/* Centre line */}
+      <View style={{ position: 'absolute', left: '50%', top: 0, bottom: 0, width: StyleSheet.hairlineWidth, backgroundColor: LINE }} />
+      {/* Centre circle */}
+      <View style={{ position: 'absolute', left: '50%', top: '50%', marginLeft: -19, marginTop: -19, width: 38, height: 38, borderRadius: 19, borderWidth: 1.5, borderColor: LINE }} />
+      {/* Penalty area right */}
+      <View style={{ position: 'absolute', right: 8, top: '50%', marginTop: -22, height: 44, width: 28, borderLeftWidth: 1.5, borderTopWidth: 1.5, borderBottomWidth: 1.5, borderColor: LINE }} />
+      {/* Goal right */}
+      <View style={{ position: 'absolute', right: 0, top: '50%', marginTop: -14, height: 28, width: 8, borderLeftWidth: 1.5, borderTopWidth: 1.5, borderBottomWidth: 1.5, borderColor: LINE }} />
+    </>
+  )
+
+  const sevensPitchMarkings = (
+    <>
+      {/* Goal top */}
+      <View style={{ position: 'absolute', top: 0, alignSelf: 'center', width: 24, height: 7, borderBottomWidth: 1.5, borderLeftWidth: 1.5, borderRightWidth: 1.5, borderColor: LINE }} />
+      {/* Penalty area top */}
+      <View style={{ position: 'absolute', top: 7, alignSelf: 'center', width: 44, height: 20, borderBottomWidth: 1.5, borderLeftWidth: 1.5, borderRightWidth: 1.5, borderColor: LINE }} />
+      {/* Centre line */}
+      <View style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: StyleSheet.hairlineWidth, backgroundColor: LINE }} />
+      {/* Penalty area bottom */}
+      <View style={{ position: 'absolute', bottom: 7, alignSelf: 'center', width: 44, height: 20, borderTopWidth: 1.5, borderLeftWidth: 1.5, borderRightWidth: 1.5, borderColor: LINE }} />
+      {/* Goal bottom */}
+      <View style={{ position: 'absolute', bottom: 0, alignSelf: 'center', width: 24, height: 7, borderTopWidth: 1.5, borderLeftWidth: 1.5, borderRightWidth: 1.5, borderColor: LINE }} />
+    </>
+  )
+
+  return (
+    <View style={{ width: totalW, height: totalH }}>
+      {/* 7s Pitch 1 — top, right-aligned above the right 9s pitch */}
+      <TouchableOpacity activeOpacity={0.8} onPress={() => onToggle('7s_top')}
+        style={{ position: 'absolute', left: sevensLeft, top: 0, width: SEVENS_W, height: SEVENS_H,
+          backgroundColor: bg('7s_top'), borderWidth: 1.5, borderColor: LINE, borderRadius: 3, overflow: 'hidden',
+          alignItems: 'center', justifyContent: 'center' }}>
+        {sevensPitchMarkings}
+        <Text style={[styles.halfLabel, { fontSize: 12 }]}>{selectedSections.has('7s_top') ? '✓' : pitchBooked ? '🔴' : '7s Pitch 1'}</Text>
+      </TouchableOpacity>
+
+      {/* 7s Pitch 2 — below Pitch 1 */}
+      <TouchableOpacity activeOpacity={0.8} onPress={() => onToggle('7s_bottom')}
+        style={{ position: 'absolute', left: sevensLeft, top: sevensTop2, width: SEVENS_W, height: SEVENS_H,
+          backgroundColor: bg('7s_bottom', true), borderWidth: 1.5, borderColor: LINE, borderRadius: 3, overflow: 'hidden',
+          alignItems: 'center', justifyContent: 'center' }}>
+        {sevensPitchMarkings}
+        <Text style={[styles.halfLabel, { fontSize: 12 }]}>{selectedSections.has('7s_bottom') ? '✓' : pitchBooked ? '🔴' : '7s Pitch 2'}</Text>
+      </TouchableOpacity>
+
+      {/* 9s Pitch 1 — bottom left */}
+      <TouchableOpacity activeOpacity={0.8} onPress={() => onToggle('9s_left')}
+        style={{ position: 'absolute', left: 0, top: ninesTop, width: NINES_W, height: NINES_H,
+          backgroundColor: bg('9s_left'), borderWidth: 1.5, borderColor: LINE, borderRadius: 3, overflow: 'hidden',
+          alignItems: 'center', justifyContent: 'center' }}>
+        {ninesPitchMarkings}
+        <Text style={styles.halfLabel}>{selectedSections.has('9s_left') ? '✓' : pitchBooked ? '🔴' : '9s Pitch 1'}</Text>
+      </TouchableOpacity>
+
+      {/* 9s Pitch 2 — bottom right */}
+      <TouchableOpacity activeOpacity={0.8} onPress={() => onToggle('9s_right')}
+        style={{ position: 'absolute', right: 0, top: ninesTop, width: NINES_W, height: NINES_H,
+          backgroundColor: bg('9s_right', true), borderWidth: 1.5, borderColor: LINE, borderRadius: 3, overflow: 'hidden',
+          alignItems: 'center', justifyContent: 'center' }}>
+        {ninesPitchMarkings}
+        <Text style={styles.halfLabel}>{selectedSections.has('9s_right') ? '✓' : pitchBooked ? '🔴' : '9s Pitch 2'}</Text>
+      </TouchableOpacity>
+    </View>
   )
 }
 
@@ -256,6 +352,7 @@ export default function PitchScreen() {
 
   const isCages = selectedPitch?.includes('Cages') ?? false
   const isQuarters = selectedPitch ? QUARTER_PITCHES.includes(selectedPitch) : false
+  const isGrassMuirend = selectedPitch === MUIREND_GRASS
   const pitchBookedOnDate = bookings.some(b => b.booking_date === selectedDate && b.pitch_name === selectedPitch)
 
   function handleSelect(p: string) {
@@ -291,6 +388,15 @@ export default function PitchScreen() {
       showAlert('Required', 'Please select a year group.')
       return
     }
+    if (bookingType === 'match' && selectedPitch.includes('11s')) {
+      const [sh, sm] = (startTime || '').split(':').map(Number)
+      const [eh, em] = (endTime || '').split(':').map(Number)
+      const duration = (eh * 60 + em) - (sh * 60 + sm)
+      if (!startTime || !endTime || isNaN(duration) || duration < 120) {
+        showAlert('Minimum 2 Hours', '11-a-side matches must be booked for at least 2 hours.')
+        return
+      }
+    }
     const { error } = await supabase.from('pitch_bookings').insert({
       year_group_id: selectedGroupId,
       booking_date: selectedDate,
@@ -308,7 +414,9 @@ export default function PitchScreen() {
   const selectionLabel = () => {
     if (selectedSections.size === 0) return null
     const cageLabels = selectedPitch ? getCageLabels(selectedPitch, CAGE_COUNTS[selectedPitch] ?? 4) : []
+    const grassLabels: Record<string, string> = { '9s_left': '9s Pitch 1', '9s_right': '9s Pitch 2', '7s_top': '7s Pitch 1', '7s_bottom': '7s Pitch 2' }
     const parts = Array.from(selectedSections).map(k => {
+      if (isGrassMuirend) return grassLabels[k] ?? k
       if (isCages) return cageLabels[parseInt(k)]
       if (isQuarters) return ['Pitch 1','Pitch 2','Pitch 3','Pitch 4'][QUARTER_KEYS.indexOf(k)] ?? k
       if (k === 'full') return 'Full Pitch'
@@ -353,7 +461,7 @@ export default function PitchScreen() {
           {pitchBookedOnDate ? (
             <Text style={styles.bookedNote}>Has bookings on {formatDate(selectedDate)}</Text>
           ) : null}
-          <Text style={styles.sectionLabel}>{isQuarters ? 'Select Quarter(s)' : isCages ? 'Select Cage(s)' : WHOLE_PITCH_ONLY.includes(selectedPitch) ? 'Select Pitch' : 'Select Half'}</Text>
+          <Text style={styles.sectionLabel}>{isQuarters ? 'Select Quarter(s)' : isCages ? 'Select Cage(s)' : isGrassMuirend ? 'Select Pitch(es)' : WHOLE_PITCH_ONLY.includes(selectedPitch) ? 'Select Pitch' : 'Select Half'}</Text>
 
           <View style={styles.pitchContainer}>
             {isCages ? (
@@ -364,6 +472,12 @@ export default function PitchScreen() {
               </View>
             ) : isQuarters ? (
               <QuarterPitch
+                selectedSections={selectedSections}
+                pitchBooked={pitchBookedOnDate}
+                onToggle={toggleSection}
+              />
+            ) : isGrassMuirend ? (
+              <MuirendGrassPitches
                 selectedSections={selectedSections}
                 pitchBooked={pitchBookedOnDate}
                 onToggle={toggleSection}
@@ -454,7 +568,7 @@ export default function PitchScreen() {
             <TextInput style={styles.input} placeholder="Any additional info..." value={notes} onChangeText={setNotes} />
 
             <TouchableOpacity style={styles.button} onPress={saveBooking}>
-              <Text style={styles.buttonText}>Confirm Booking · £60</Text>
+              <Text style={styles.buttonText}>Confirm Booking · £{bookingType === 'match' ? 70 : 60}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.cancelButton} onPress={() => setModalVisible(false)}>
               <Text style={styles.cancelText}>Cancel</Text>
@@ -501,7 +615,7 @@ const styles = StyleSheet.create({
   quarterGrid: { gap: 6 },
   miniPitch: { width: 130, height: 160, borderWidth: 2, borderColor: LINE, borderRadius: 4, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   halfLabel: { color: LINE, fontWeight: '700', fontSize: 14 },
-  halfwayLine: { height: 2, width: '100%', backgroundColor: LINE, alignItems: 'center', justifyContent: 'center' },
+  halfwayLine: { height: StyleSheet.hairlineWidth, width: '100%', backgroundColor: LINE, alignItems: 'center', justifyContent: 'center' },
   centreDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: LINE },
   centreCircleTop: { position: 'absolute', bottom: -30, width: 60, height: 60, borderRadius: 30, borderWidth: 2, borderColor: LINE, backgroundColor: 'transparent' },
   centreCircleBottom: { position: 'absolute', top: -30, width: 60, height: 60, borderRadius: 30, borderWidth: 2, borderColor: LINE, backgroundColor: 'transparent' },
@@ -514,7 +628,7 @@ const styles = StyleSheet.create({
   cageGrid: { flexDirection: 'column', width: 280, gap: 6 },
   cage: { width: '100%', height: 70, borderWidth: 2, borderColor: LINE, borderRadius: 4, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   cageGoalTop: { position: 'absolute', left: 0, top: '50%', marginTop: -15, width: 10, height: 30, borderRightWidth: 2, borderTopWidth: 2, borderBottomWidth: 2, borderColor: LINE },
-  cageCentreLine: { position: 'absolute', height: '100%', width: 2, backgroundColor: LINE },
+  cageCentreLine: { position: 'absolute', height: '100%', width: StyleSheet.hairlineWidth, backgroundColor: LINE },
   cageGoalBottom: { position: 'absolute', right: 0, top: '50%', marginTop: -15, width: 10, height: 30, borderLeftWidth: 2, borderTopWidth: 2, borderBottomWidth: 2, borderColor: LINE },
   cageLabel: { color: LINE, fontWeight: '700', fontSize: 13 },
   selectionBanner: { marginTop: 20, backgroundColor: '#007AFF', borderRadius: 12, padding: 16, alignItems: 'center', gap: 12 },
