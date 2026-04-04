@@ -37,8 +37,9 @@ export default function AppLayout() {
       headerTitle: 'OLM Football',
       headerLeft: () => <HeaderLogo />,
     }}>
-      <Tabs.Screen name="calendar" options={{ title: 'Scheduling' }} />
       <Tabs.Screen name="summary" options={{ title: 'Cost Summary' }} />
+      <Tabs.Screen name="pitch" options={{ title: 'Pitch View' }} />
+      <Tabs.Screen name="calendar" options={{ title: 'Calendar View' }} />
       <Tabs.Screen name="settings" options={{ title: 'Settings' }} />
       <Tabs.Screen name="year-groups" options={{ href: null }} />
       <Tabs.Screen name="fees/[id]" options={{ href: null }} />

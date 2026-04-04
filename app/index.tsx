@@ -15,5 +15,5 @@ export default function Index() {
 
   if (!session) return <Redirect href="/(auth)/login" />
   if (!isApproved) return <Redirect href="/(auth)/pending" />
-  return <Redirect href="/(app)/year-groups" />
+  return <Redirect href="/(app)/summary" />
 }

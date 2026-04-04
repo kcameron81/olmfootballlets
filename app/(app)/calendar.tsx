@@ -117,7 +117,6 @@ const PITCH_OPTIONS = [
   'Muirend Cages',
   'Williamwood 11s',
   'Maidenhill 9s',
-  'Roukenglen Pitches',
   'Other',
 ]
 const SESSION_COST = 60
