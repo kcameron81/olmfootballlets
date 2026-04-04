@@ -6,11 +6,11 @@ import { PitchBooking, YearGroup } from '../../lib/types'
 
 const PITCHES = [
   'Woodfarm 11s',
-  'Woodfarm Cages',
   'GHA 11s',
-  'Muirend Cages',
   'Williamwood 11s',
   'Maidenhill 9s',
+  'Woodfarm Cages',
+  'Muirend Cages',
 ]
 
 const GROUP_COLORS = ['#007AFF', '#34C759', '#FF9500', '#FF3B30', '#AF52DE', '#5AC8FA', '#FF2D55', '#FFCC00']
@@ -28,6 +28,10 @@ const CAGE_COUNTS: Record<string, number> = {
 const CAGE_LABEL_OVERRIDES: Record<string, string[]> = {
   'Muirend Cages': ['5s Pitch 1 & 2', '5s Pitch 3 & 4'],
 }
+
+const QUARTER_PITCHES = ['GHA 11s']
+const QUARTER_KEYS = ['q1', 'q2', 'q3', 'q4']
+const QUARTER_LABELS = ['Q1', 'Q2', 'Q3', 'Q4']
 
 function getCageLabels(pitchName: string, count: number) {
   return CAGE_LABEL_OVERRIDES[pitchName] ?? Array.from({ length: count }, (_, i) => `5s Pitch ${i + 1}`)
@@ -128,16 +132,88 @@ function FullPitch({ selectedHalf, pitchBooked, onToggle }: {
   )
 }
 
-function CagePitch({ index, label, selected, booked, onToggle }: {
-  index: number; label: string; selected: boolean; booked: boolean; onToggle: () => void
+const WHOLE_PITCH_ONLY = ['Maidenhill 9s']
+
+function SinglePitch({ selected, pitchBooked, onToggle }: {
+  selected: boolean; pitchBooked: boolean; onToggle: () => void
 }) {
-  const bg = selected ? PITCH_GREEN_SELECTED : booked ? PITCH_GREEN_BOOKED : index % 2 === 0 ? PITCH_GREEN : PITCH_GREEN_ALT
+  const bg = selected ? PITCH_GREEN_SELECTED : pitchBooked ? PITCH_GREEN_BOOKED : PITCH_GREEN
   return (
-    <TouchableOpacity activeOpacity={0.8} style={[styles.cage, { backgroundColor: bg }]} onPress={onToggle}>
-      <View style={styles.cageGoalTop} />
-      <View style={styles.cageCentreLine} />
-      <View style={styles.cageGoalBottom} />
-      <Text style={styles.cageLabel}>{selected ? '✓' : booked ? '🔴 Booked' : label}</Text>
+    <TouchableOpacity activeOpacity={0.8} style={[styles.pitch, { height: 362 }]} onPress={onToggle}>
+      <View style={[styles.half, { backgroundColor: bg }]}>
+        <View style={styles.goalTop} />
+        <View style={styles.penaltyBoxTop}><View style={styles.sixYardTop} /></View>
+        <View style={styles.centreCircleTop} />
+      </View>
+      <View style={styles.halfwayLine}><View style={styles.centreDot} /></View>
+      <View style={[styles.half, { backgroundColor: bg }]}>
+        <View style={styles.centreCircleBottom} />
+        <View style={styles.penaltyBoxBottom}><View style={styles.sixYardBottom} /></View>
+        <View style={styles.goalBottom} />
+        <Text style={styles.halfLabel}>{selected ? '✓ Selected' : pitchBooked ? '🔴 Booked' : 'Full Pitch'}</Text>
+      </View>
+    </TouchableOpacity>
+  )
+}
+
+function MiniPitch({ label, selected, booked, bg, onToggle }: {
+  label: string; selected: boolean; booked: boolean; bg: string; onToggle: () => void
+}) {
+  return (
+    <TouchableOpacity activeOpacity={0.8} style={[styles.miniPitch, { backgroundColor: bg }]} onPress={onToggle}>
+      {/* Goal top */}
+      <View style={{ position: 'absolute', top: 0, alignSelf: 'center', width: 28, height: 8, borderBottomWidth: 2, borderLeftWidth: 2, borderRightWidth: 2, borderColor: LINE }} />
+      {/* Centre line */}
+      <View style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: 1, backgroundColor: LINE }} />
+      {/* Goal bottom */}
+      <View style={{ position: 'absolute', bottom: 0, alignSelf: 'center', width: 28, height: 8, borderTopWidth: 2, borderLeftWidth: 2, borderRightWidth: 2, borderColor: LINE }} />
+      <Text style={styles.halfLabel}>{selected ? '✓' : booked ? '🔴' : label}</Text>
+    </TouchableOpacity>
+  )
+}
+
+function QuarterPitch({ selectedSections, pitchBooked, onToggle }: {
+  selectedSections: Set<string>; pitchBooked: boolean; onToggle: (key: string) => void
+}) {
+  const keys = ['q1', 'q2', 'q3', 'q4']
+  const labels = ['Pitch 1', 'Pitch 2', 'Pitch 3', 'Pitch 4']
+  function qBg(key: string, i: number) {
+    if (selectedSections.has(key)) return PITCH_GREEN_SELECTED
+    if (pitchBooked) return PITCH_GREEN_BOOKED
+    return i % 2 === 0 ? PITCH_GREEN : PITCH_GREEN_ALT
+  }
+  return (
+    <View style={styles.quarterGrid}>
+      <View style={{ flexDirection: 'row', gap: 6 }}>
+        {keys.slice(0, 2).map((k, i) => (
+          <MiniPitch key={k} label={labels[i]} selected={selectedSections.has(k)} booked={pitchBooked} bg={qBg(k, i)} onToggle={() => onToggle(k)} />
+        ))}
+      </View>
+      <View style={{ flexDirection: 'row', gap: 6 }}>
+        {keys.slice(2).map((k, i) => (
+          <MiniPitch key={k} label={labels[i + 2]} selected={selectedSections.has(k)} booked={pitchBooked} bg={qBg(k, i)} onToggle={() => onToggle(k)} />
+        ))}
+      </View>
+    </View>
+  )
+}
+
+const CAGE_DISABLED: Record<string, number[]> = {
+  'Muirend Cages': [1],
+  'Woodfarm Cages': [0],
+}
+
+function CagePitch({ pitchName, index, label, selected, booked, onToggle }: {
+  pitchName: string; index: number; label: string; selected: boolean; booked: boolean; onToggle: () => void
+}) {
+  const disabled = (CAGE_DISABLED[pitchName] ?? []).includes(index)
+  const bg = disabled ? '#ccc' : selected ? PITCH_GREEN_SELECTED : booked ? PITCH_GREEN_BOOKED : index % 2 === 0 ? PITCH_GREEN : PITCH_GREEN_ALT
+  return (
+    <TouchableOpacity activeOpacity={disabled ? 1 : 0.8} style={[styles.cage, { backgroundColor: bg }]} onPress={disabled ? undefined : onToggle} disabled={disabled}>
+      {disabled ? null : <View style={styles.cageGoalTop} />}
+      {disabled ? null : <View style={styles.cageCentreLine} />}
+      {disabled ? null : <View style={styles.cageGoalBottom} />}
+      <Text style={[styles.cageLabel, disabled ? { color: '#888' } : null]}>{disabled ? 'Unavailable' : selected ? '✓' : booked ? '🔴 Booked' : label}</Text>
     </TouchableOpacity>
   )
 }
@@ -179,6 +255,7 @@ export default function PitchScreen() {
   }
 
   const isCages = selectedPitch?.includes('Cages') ?? false
+  const isQuarters = selectedPitch ? QUARTER_PITCHES.includes(selectedPitch) : false
   const pitchBookedOnDate = bookings.some(b => b.booking_date === selectedDate && b.pitch_name === selectedPitch)
 
   function handleSelect(p: string) {
@@ -231,9 +308,12 @@ export default function PitchScreen() {
   const selectionLabel = () => {
     if (selectedSections.size === 0) return null
     const cageLabels = selectedPitch ? getCageLabels(selectedPitch, CAGE_COUNTS[selectedPitch] ?? 4) : []
-    const parts = Array.from(selectedSections).map(k =>
-      isCages ? cageLabels[parseInt(k)] : (k === 'top' ? 'Top Half' : 'Bottom Half')
-    )
+    const parts = Array.from(selectedSections).map(k => {
+      if (isCages) return cageLabels[parseInt(k)]
+      if (isQuarters) return ['Pitch 1','Pitch 2','Pitch 3','Pitch 4'][QUARTER_KEYS.indexOf(k)] ?? k
+      if (k === 'full') return 'Full Pitch'
+      return k === 'top' ? 'Top Half' : 'Bottom Half'
+    })
     return `${selectedPitch} — ${parts.join(', ')}`
   }
 
@@ -273,15 +353,27 @@ export default function PitchScreen() {
           {pitchBookedOnDate ? (
             <Text style={styles.bookedNote}>Has bookings on {formatDate(selectedDate)}</Text>
           ) : null}
-          <Text style={styles.sectionLabel}>{isCages ? 'Select Cage(s)' : 'Select Half'}</Text>
+          <Text style={styles.sectionLabel}>{isQuarters ? 'Select Quarter(s)' : isCages ? 'Select Cage(s)' : WHOLE_PITCH_ONLY.includes(selectedPitch) ? 'Select Pitch' : 'Select Half'}</Text>
 
           <View style={styles.pitchContainer}>
             {isCages ? (
               <View style={styles.cageGrid}>
                 {getCageLabels(selectedPitch, CAGE_COUNTS[selectedPitch] ?? 4).map((label, i) => (
-                  <CagePitch key={i} index={i} label={label} selected={selectedSections.has(String(i))} booked={pitchBookedOnDate} onToggle={() => toggleSection(String(i))} />
+                  <CagePitch key={i} pitchName={selectedPitch} index={i} label={label} selected={selectedSections.has(String(i))} booked={pitchBookedOnDate} onToggle={() => toggleSection(String(i))} />
                 ))}
               </View>
+            ) : isQuarters ? (
+              <QuarterPitch
+                selectedSections={selectedSections}
+                pitchBooked={pitchBookedOnDate}
+                onToggle={toggleSection}
+              />
+            ) : WHOLE_PITCH_ONLY.includes(selectedPitch) ? (
+              <SinglePitch
+                selected={selectedSections.has('full')}
+                pitchBooked={pitchBookedOnDate}
+                onToggle={() => toggleSection('full')}
+              />
             ) : (
               <FullPitch
                 selectedHalf={selectedSections.has('top') ? 'top' : selectedSections.has('bottom') ? 'bottom' : null}
@@ -406,6 +498,8 @@ const styles = StyleSheet.create({
     backgroundColor: PITCH_GREEN, overflow: 'hidden', borderRadius: 4,
   },
   half: { height: 180, width: '100%', alignItems: 'center', justifyContent: 'center' },
+  quarterGrid: { gap: 6 },
+  miniPitch: { width: 130, height: 160, borderWidth: 2, borderColor: LINE, borderRadius: 4, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   halfLabel: { color: LINE, fontWeight: '700', fontSize: 14 },
   halfwayLine: { height: 2, width: '100%', backgroundColor: LINE, alignItems: 'center', justifyContent: 'center' },
   centreDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: LINE },
